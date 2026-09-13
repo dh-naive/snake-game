@@ -2,7 +2,9 @@
   const COLS = 20;
   const ROWS = 20;
   const STORAGE_KEY = "snake-high-score";
-  const INITIAL_TICK = 140;
+  const params = new URLSearchParams(window.location.search);
+  const tickOverride = Number(params.get("tick"));
+  const INITIAL_TICK = Number.isFinite(tickOverride) && tickOverride >= 40 ? tickOverride : 140;
   const MIN_TICK = 72;
 
   const DIRS = {
@@ -41,10 +43,14 @@
   const ctx = canvas.getContext("2d");
 
   const state = {
-    snake: [],
+    snake: [
+      { x: 8, y: 10 },
+      { x: 7, y: 10 },
+      { x: 6, y: 10 },
+    ],
     dir: DIRS.right,
     queued: [],
-    food: { x: 12, y: 8 },
+    food: { x: 12, y: 10 },
     score: 0,
     highScore: Number(localStorage.getItem(STORAGE_KEY) || 0),
     status: "ready",
@@ -81,7 +87,10 @@
     ];
     state.dir = DIRS.right;
     state.queued = [];
-    state.food = randomEmptyCell();
+    state.food = { x: 12, y: 10 };
+    if (state.snake.some((part) => sameCell(part, state.food))) {
+      state.food = randomEmptyCell();
+    }
     state.score = 0;
     state.status = "playing";
     state.lastTick = 0;
@@ -316,4 +325,25 @@
   window.addEventListener("resize", resizeCanvas);
   resizeCanvas();
   state.raf = requestAnimationFrame(loop);
+
+  window.__SNAKE = {
+    getState() {
+      return {
+        status: state.status,
+        score: state.score,
+        highScore: state.highScore,
+        snake: state.snake.map((p) => ({ ...p })),
+        food: { ...state.food },
+        dir: { ...state.dir },
+      };
+    },
+    start: startOrResume,
+    reset: resetGame,
+    pause: () => setPaused(true),
+    resume: () => setPaused(false),
+    queueDirection,
+    setFood(x, y) {
+      state.food = { x, y };
+    },
+  };
 })();
