@@ -170,7 +170,9 @@
   }
 
   function resizeCanvas() {
-    const size = canvas.clientWidth * window.devicePixelRatio;
+    const cssSize = canvas.clientWidth;
+    if (!cssSize) return;
+    const size = cssSize * window.devicePixelRatio;
     canvas.width = size;
     canvas.height = size;
     draw();
